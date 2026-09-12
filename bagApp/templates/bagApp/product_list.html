@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Handbags</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm py-6 mb-10">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <h1 class="text-3xl font-serif text-gray-900 tracking-wide">The Handbag Collection</h1>
+        </div>
+    </header>
+
+    <!-- Product Grid -->
+    <main class="max-w-7xl mx-auto px-4 mb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+
+            {% for product in products %}
+            <!-- Individual Product Card -->
+            <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+
+                <!-- Image Container with a subtle zoom on hover -->
+                <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-72 object-cover object-center group-hover:scale-105 transition-transform duration-500">
+                </div>
+
+                <!-- Product Details -->
+                <div class="p-6 text-center">
+                    <h2 class="text-lg font-medium text-gray-900 mb-1">{{ product.name }}</h2>
+                    <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ product.description }}</p>
+                    <p class="text-xl font-semibold text-gray-900 mb-4">KES {{ product.price }}</p>
+
+                    <button class="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors">
+                        Add to Cart
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-20 text-gray-500">
+                <p>No handbags available at the moment. Please check back later!</p>
+            </div>
+            {% endfor %}
+
+        </div>
+    </main>
+
+</body>
+</html>
