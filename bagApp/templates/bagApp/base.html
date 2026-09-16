@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Handbags</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen">
+
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-8">
+
+        <!-- Logo -->
+        <a href="{% url 'home' %}" class="text-2xl font-serif text-gray-900 tracking-wide flex-shrink-0">
+            The Handbag Collection
+        </a>
+
+        <!-- NEW: Navigation Links (Home & Categories) -->
+        <nav class="hidden md:flex items-center gap-6 font-medium text-gray-700 ml-4">
+            <a href="{% url 'home' %}" class="hover:text-black transition">Home</a>
+
+            <!-- Category Dropdown -->
+            <div class="relative group">
+                <!-- Added extra padding to the bottom (pb-6) so the mouse doesn't fall off the dropdown -->
+                <button class="hover:text-black transition flex items-center gap-1 pb-6 -mb-6">
+                    Categories
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <!-- The Dropdown Menu -->
+                <div class="absolute top-full left-0 mt-4 w-48 bg-white border border-gray-100 shadow-xl rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2 overflow-hidden">
+                    <a href="{% url 'product_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black font-medium border-b border-gray-100">Shop All Bags</a>
+
+                    {% for category in nav_categories %}
+                        <a href="{% url 'product_list' %}?category={{ category.slug }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-black">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </nav>
+
+        <!-- Global Search Bar with Dropdown -->
+        <div class="relative flex-grow max-w-xl hidden md:block group">
+            <form method="GET" action="{% url 'product_list' %}" class="relative z-20">
+                <input type="text" name="q" placeholder="Search for a style, color, or category..."
+                       class="w-full bg-gray-100 border-transparent rounded-full py-2.5 pl-5 pr-10 focus:bg-white focus:border-black focus:ring-0 text-sm"
+                       autocomplete="off">
+                <button type="submit" class="absolute right-3 top-2.5 text-gray-500 hover:text-black">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+            </form>
+
+            <!-- CORRECTED: Changed peer-focus to group-focus-within -->
+            <div class="absolute top-full left-0 right-0 bg-white border border-gray-200 shadow-xl rounded-b-xl mt-1 opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible hover:opacity-100 hover:visible transition-all duration-200 z-10 pt-4 pb-4 px-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Trending Suggestions -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Trending Searches</h4>
+                        <ul class="space-y-2">
+                            {% for item in suggested_trending %}
+                                <li><a href="{% url 'product_detail' item.id %}" class="text-sm text-gray-700 hover:text-black flex items-center gap-2"><svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> {{ item.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <!-- Popular Suggestions -->
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Right Now</h4>
+                        <ul class="space-y-2">
+                            {% for item in suggested_popular %}
+                                <li><a href="{% url 'product_detail' item.id %}" class="text-sm text-gray-700 hover:text-black flex items-center gap-2"><span class="w-1.5 h-1.5 bg-black rounded-full"></span> {{ item.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side (Cart, Contact) -->
+        <div class="flex items-center gap-4 flex-shrink-0">
+            <a href="{% url 'track_order' %}" class="text-gray-600 hover:text-black font-medium transition-colors">
+                Track Order
+            </a>
+            <!-- Contact Link -->
+            <a href="{% url 'contact' %}" class="text-gray-600 hover:text-black font-medium transition-colors">
+                Contact
+            </a>
+
+            <!-- The Cart Icon -->
+            <a href="{% url 'cart_detail' %}" class="relative inline-block text-gray-900 hover:text-gray-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <span id="cart-icon-count" class="absolute -top-2 -right-2 bg-black text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                    {{ cart_count }}
+                </span>
+            </a>
+        </div>
+    </div>
+</header>
+
+    <!-- Add this right below your <header> and right above your <main> -->
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %} bg-red-100 text-red-700 {% elif message.tags == 'warning' %} bg-yellow-100 text-yellow-700 {% else %} bg-green-100 text-green-700 {% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Dynamic Content is Injected Here -->
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="bg-white text-center py-6 mt-10 border-t">
+        <p class="text-gray-500 text-sm">&copy; 2026 The Handbag Collection. All rights reserved.</p>
+    </footer>
+
+<!-- Dynamic Top-Center Notification -->
+    <div id="cart-toast" class="fixed top-10 left-1/2 transform -translate-x-1/2 -translate-y-[200%] opacity-0 transition-all duration-300 z-[100] px-6 py-4 rounded-md shadow-2xl flex items-center gap-4 text-white font-medium">
+        <span id="toast-icon"></span>
+        <span id="toast-message" class="text-sm"></span>
+        <a id="toast-cart-link" href="{% url 'cart_detail' %}" class="ml-2 bg-white text-black px-4 py-1.5 rounded-sm text-xs font-bold hover:bg-gray-200 transition hidden">VIEW CART</a>
+    </div>
+
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartForms = document.querySelectorAll('.ajax-cart-form');
+            const toast = document.getElementById('cart-toast');
+            const messageEl = document.getElementById('toast-message');
+            const iconEl = document.getElementById('toast-icon');
+            const linkEl = document.getElementById('toast-cart-link');
+
+            const successIcon = '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            const errorIcon = '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+
+            cartForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        messageEl.textContent = data.message;
+
+                        // Update the badge AND save it to browser storage
+                        const cartBadge = document.getElementById('cart-icon-count');
+                        if (cartBadge && data.cart_count !== undefined) {
+                            cartBadge.textContent = data.cart_count;
+                            localStorage.setItem('saved_cart_count', data.cart_count); // <-- NEW
+                        }
+
+                        toast.classList.remove('bg-black', 'bg-red-600', 'bg-orange-500');
+
+                        if (data.status === 'error') {
+                            toast.classList.add('bg-red-600');
+                            iconEl.innerHTML = errorIcon;
+                            linkEl.classList.add('hidden');
+                        } else if (data.status === 'warning') {
+                            toast.classList.add('bg-orange-500');
+                            iconEl.innerHTML = errorIcon;
+                            linkEl.classList.add('hidden');
+                        } else {
+                            toast.classList.add('bg-black');
+                            iconEl.innerHTML = successIcon;
+                            linkEl.classList.remove('hidden');
+                        }
+
+                        toast.classList.remove('-translate-y-[200%]', 'opacity-0');
+                        setTimeout(() => {
+                            toast.classList.add('-translate-y-[200%]', 'opacity-0');
+                        }, 4000);
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
+        });
+
+        // NEW: Handle the Back Button (bfcache)
+        // NEW: Bulletproof Back Button Handler
+        window.addEventListener('pageshow', function(event) {
+            const cartBadge = document.getElementById('cart-icon-count');
+            if (!cartBadge) return;
+
+            // 1. Detect if the user used the Back/Forward button
+            const isBackNavigation = event.persisted ||
+                (typeof window.performance !== 'undefined' && window.performance.navigation.type === 2);
+
+            if (isBackNavigation) {
+                // 2. Grab the updated number we saved in the background
+                const savedCount = localStorage.getItem('saved_cart_count');
+                if (savedCount) {
+                    cartBadge.textContent = savedCount;
+                }
+            } else {
+                // 3. If it's a normal page load, sync the server's number to storage
+                localStorage.setItem('saved_cart_count', cartBadge.textContent.trim());
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% extends 'bagApp/base.html' %}
+
+{% block content %}
+
+    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow-sm overflow-hidden mt-10">
+        <div class="grid grid-cols-1 md:grid-cols-2">
+
+            <!-- Product Image -->
+            <div class="bg-gray-100">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover object-center">
+            </div>
+
+            <!-- Product Details -->
+            <div class="p-10 flex flex-col justify-center">
+                <!-- Smart Back Button -->
+                <button onclick="history.back()" class="text-sm text-gray-500 hover:text-black mb-8 flex items-center gap-2 group transition">
+                    <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to previous page
+                </button>
+
+                <h1 class="text-4xl font-serif text-gray-900 mb-4">{{ product.name }}</h1>
+                <p class="text-3xl font-semibold text-gray-900 mb-6">KES {{ product.price }}</p>
+
+                <div class="prose text-gray-600 mb-8">
+                    <p>{{ product.description }}</p>
+                </div>
+
+                <p class="text-sm text-gray-500 mb-6">In Stock: {{ product.stock_quantity }}</p>
+
+                        <form action="{% url 'add_to_cart' product.id %}" method="POST" class="ajax-cart-form">
+            {% csrf_token %}
+            <button type="submit" class="block text-center w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 transition-colors text-lg font-medium">
+                Add to Cart
+            </button>
+        </form>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}

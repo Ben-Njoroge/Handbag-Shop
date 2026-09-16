@@ -1,0 +1,110 @@
+{% extends 'bagApp/base.html' %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 mt-10 mb-16 grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+    <!-- Left: Form -->
+    <div class="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+        <form method="POST" action="{% url 'checkout' %}">
+            {% csrf_token %}
+            <h2 class="text-xl font-medium mb-4">1. Delivery Details</h2>
+                <div class="space-y-4 mb-8">
+                    <input type="text" name="full_name" required placeholder="Full Name" class="w-full border rounded-md p-3 focus:ring-black">
+                    <input type="tel" name="phone_number" required placeholder="Phone Number" class="w-full border rounded-md p-3 focus:ring-black">
+
+                    <select name="delivery_location" id="location-select" required class="w-full border rounded-md p-3 focus:ring-black">
+                        <option value="" data-price="0" data-category="None">-- Select Delivery Method --</option>
+
+                        <optgroup label="📍 Within Nyeri Town (Free Meetup)">
+                            {% for loc in locations %}{% if loc.category == 'Local' %}
+                                <option value="{{ loc.id }}" data-price="{{ loc.price }}" data-category="{{ loc.category }}">{{ loc.name }}</option>
+                            {% endif %}{% endfor %}
+                        </optgroup>
+
+                        <optgroup label="📦 2NK Parcel Offices">
+                            {% for loc in locations %}{% if loc.category == '2NK' %}
+                                <option value="{{ loc.id }}" data-price="{{ loc.price }}" data-category="{{ loc.category }}">{{ loc.name }} (KES {{ loc.price }})</option>
+                            {% endif %}{% endfor %}
+                        </optgroup>
+
+                        <optgroup label="🚚 Other Locations">
+                            {% for loc in locations %}{% if loc.category == 'Other' %}
+                                <option value="{{ loc.id }}" data-price="{{ loc.price }}" data-category="{{ loc.category }}">{{ loc.name }}</option>
+                            {% endif %}{% endfor %}
+                        </optgroup>
+                    </select>
+
+                    <!-- Custom warning message -->
+                    <p id="custom-warning" class="text-sm text-yellow-600 hidden">Note: For custom locations, we will contact you to agree on the delivery fee separately.</p>
+
+                    <!-- Hidden by default, revealed by JS -->
+                    <div id="custom-details-container" class="hidden">
+                        <textarea name="delivery_notes" id="delivery_notes_input" rows="2" placeholder="e.g. I am in Thika, please send via Neo Kenya Mpya" class="w-full border border-gray-300 rounded-md p-3 focus:ring-black"></textarea>
+                    </div>
+                </div>
+
+            <h2 class="text-xl font-medium mb-4">2. Make Payment</h2>
+            <div class="p-6 bg-gray-50 border rounded-lg mb-8">
+                <p class="mb-4">Send exactly <strong id="display-total" class="text-xl">KES {{ cart_total }}</strong> via M-PESA.</p>
+                <ul class="text-sm text-gray-600 space-y-2 mb-6">
+                    <li>1. Open M-PESA -> Pochi la Biashara (or Send Money)</li>
+                    <li>2. Enter Number: <strong class="text-black">07XX XXX XXX</strong></li>
+                </ul>
+                <input type="text" name="mpesa_code" placeholder="M-PESA Code (e.g. TAD8XXXXXX)" required class="w-full border rounded-md p-3 uppercase font-mono focus:ring-black">
+            </div>
+            <button type="submit" class="w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 text-lg font-medium">Confirm Order</button>
+        </form>
+    </div>
+
+    <!-- Right: Summary -->
+    <div class="bg-gray-50 p-8 rounded-xl h-fit border">
+        <h2 class="text-xl font-medium mb-6">Order Summary</h2>
+        {% for item in cart_items %}
+            <div class="flex justify-between border-b pb-4 mb-4">
+                <span>{{ item.quantity }}x {{ item.product.name }}</span>
+                <span>KES {{ item.sub_total }}</span>
+            </div>
+        {% endfor %}
+        <div class="flex justify-between font-bold text-xl mt-4">
+            <span>Bag Total</span><span>KES {{ cart_total }}</span>
+        </div>
+        <div class="flex justify-between font-bold text-xl mt-2 text-blue-600">
+            <span>+ Shipping</span><span id="display-shipping">KES 0.00</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const baseCartTotal = parseFloat("{{ cart_total }}");
+    const locationSelect = document.getElementById('location-select');
+    const displayTotal = document.getElementById('display-total');
+    const displayShipping = document.getElementById('display-shipping');
+    const customWarning = document.getElementById('custom-warning');
+
+    // Grabbing our new text area elements
+    const customDetailsContainer = document.getElementById('custom-details-container');
+    const deliveryNotesInput = document.getElementById('delivery_notes_input');
+
+    locationSelect.addEventListener('change', function() {
+        const selectedOption = locationSelect.options[locationSelect.selectedIndex];
+        const shippingPrice = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+
+        // Grab the specific category from the dropdown option
+        const category = selectedOption.getAttribute('data-category');
+
+        displayShipping.innerText = "KES " + shippingPrice.toFixed(2);
+        displayTotal.innerText = "KES " + (baseCartTotal + shippingPrice).toFixed(2);
+
+        // Show warning AND text box ONLY if "Other" is selected
+        if (category === 'Other') {
+            customWarning.classList.remove('hidden');
+            customDetailsContainer.classList.remove('hidden');
+            deliveryNotesInput.setAttribute('required', 'required'); // Force them to fill it
+        } else {
+            customWarning.classList.add('hidden');
+            customDetailsContainer.classList.add('hidden');
+            deliveryNotesInput.removeAttribute('required'); // Remove requirement
+            deliveryNotesInput.value = ''; // Clear out old text if they change their mind
+        }
+    });
+</script>
+{% endblock %}

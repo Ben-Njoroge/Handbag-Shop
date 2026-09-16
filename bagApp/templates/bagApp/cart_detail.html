@@ -1,0 +1,103 @@
+{% extends 'bagApp/base.html' %}
+
+{% block content %}
+
+
+    <div class="max-w-7xl mx-auto mt-10">
+        <h1 class="text-3xl font-serif text-gray-900 mb-8">Shopping Cart</h1>
+
+        {% if not cart_items %}
+            <div class="bg-white p-10 rounded-xl shadow-sm text-center">
+                <p class="text-xl text-gray-500 mb-6">Your cart is currently empty.</p>
+                <a href="{% url 'product_list' %}" class="inline-block bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors">
+                    Continue Shopping
+                </a>
+            </div>
+        {% else %}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+                <!-- Cart Items (Left Side) -->
+                <div class="lg:col-span-2 space-y-6">
+                    {% for cart_item in cart_items %}
+                    <div class="flex items-center justify-between bg-white p-6 rounded-xl shadow-sm">
+
+                        <!-- Image & Details -->
+                        <div class="flex items-center space-x-6">
+                            <div class="w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+                                <img src="{{ cart_item.product.image.url }}" alt="{{ cart_item.product.name }}" class="w-full h-full object-cover">
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-medium text-gray-900">{{ cart_item.product.name }}</h2>
+                                <p class="text-sm text-gray-500">KES {{ cart_item.product.price }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Quantity & Subtotal -->
+                       <!-- Quantity, Subtotal & Actions -->
+                        <div class="flex flex-col items-end">
+
+                            <!-- Subtotal -->
+                            <p class="text-lg font-semibold text-gray-900 mb-4">KES {{ cart_item.sub_total }}</p>
+
+                            <!-- Quantity Controls -->
+                            <div class="flex items-center border border-gray-200 rounded-md mb-2">
+                                <!-- Minus Button -->
+                                <a href="{% url 'remove_cart_item' cart_item.product.id %}" class="px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">
+                                    -
+                                </a>
+
+                                <!-- Current Quantity -->
+                                <span class="px-4 py-1 text-sm text-gray-800 border-l border-r border-gray-200">
+                                    {{ cart_item.quantity }}
+                                </span>
+
+                                <!-- Plus Button (Reuses our add_to_cart view!) -->
+                                <a href="{% url 'add_to_cart' cart_item.product.id %}" class="px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">
+                                    +
+                                </a>
+                            </div>
+
+                            <!-- Remove Completely Button -->
+                            <a href="{% url 'remove_cart_item_completely' cart_item.product.id %}" class="text-sm text-red-500 hover:text-red-700 transition-colors">
+                                Remove
+                            </a>
+
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Order Summary (Right Side) -->
+                <div class="bg-white p-8 rounded-xl shadow-sm h-fit">
+                    <h2 class="text-xl font-medium text-gray-900 mb-6">Order Summary</h2>
+
+                    <div class="flex justify-between text-gray-600 mb-4">
+                        <span>Subtotal</span>
+                        <span>KES {{ total }}</span>
+                    </div>
+
+                    <div class="flex justify-between text-gray-600 mb-6 pb-6 border-b">
+                        <span>Shipping</span>
+                        <span>Calculated at checkout</span>
+                    </div>
+
+                    <div class="flex justify-between text-xl font-semibold text-gray-900 mb-8">
+                        <span>Total</span>
+                        <span>KES {{ total }}</span>
+                    </div>
+
+                    <a href="{% url 'checkout' %}" class="block text-center w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 transition-colors text-lg font-medium">
+                            Proceed to Checkout
+                    </a>
+
+                    <a href="{% url 'product_list' %}" class="block text-center text-sm text-gray-500 mt-4 hover:text-black">
+                        or Continue Shopping
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+
+{% endblock %}

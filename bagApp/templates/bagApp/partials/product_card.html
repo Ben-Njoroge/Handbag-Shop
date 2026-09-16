@@ -1,0 +1,38 @@
+<!-- Reusable Product Card -->
+<div class="relative group flex flex-col h-full">
+    <!-- SALE Badge -->
+    {% if product.old_price %}
+        <span class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 z-10 rounded-sm">SALE</span>
+    {% endif %}
+
+    <!-- Image Link -->
+    <a href="{% url 'product_detail' product.id %}" class="block mb-3 overflow-hidden bg-gray-100 aspect-square">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        {% else %}
+            <div class="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+        {% endif %}
+    </a>
+
+    <!-- Title Link -->
+    <h3 class="text-gray-900 font-medium">
+        <a href="{% url 'product_detail' product.id %}" class="hover:text-gray-600">{{ product.name }}</a>
+    </h3>
+
+    <!-- Price Display -->
+    <div class="mt-1 flex items-center gap-2 mb-4 flex-grow">
+        {% if product.old_price %}
+            <del class="text-sm text-gray-400">KES {{ product.old_price }}</del>
+        {% endif %}
+        <span class="text-gray-900 font-medium">KES {{ product.price }}</span>
+    </div>
+
+    <!-- Action Button -->
+    <!-- Action Button (Now strictly Add to Cart) -->
+    <form action="{% url 'add_to_cart' product.id %}" method="POST" class="ajax-cart-form w-full mt-auto">
+        {% csrf_token %}
+        <button type="submit" class="block w-full text-center bg-black text-white py-2 rounded-md hover:bg-gray-800 transition text-sm font-medium">
+            Add to Cart
+        </button>
+    </form>
+</div>

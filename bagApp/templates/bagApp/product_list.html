@@ -1,52 +1,107 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luxury Handbags</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+{% extends 'bagApp/base.html' %}
+{% block content %}
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm py-6 mb-10">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <h1 class="text-3xl font-serif text-gray-900 tracking-wide">The Handbag Collection</h1>
-        </div>
-    </header>
+<!-- Header -->
+<div class="bg-gray-100 py-10 px-4 text-center mb-8">
+    <h1 class="text-3xl font-serif text-gray-900">Shop The Collection</h1>
+</div>
 
-    <!-- Product Grid -->
-    <main class="max-w-7xl mx-auto px-4 mb-16">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+<div class="max-w-7xl mx-auto px-4 mb-16 flex flex-col md:flex-row gap-10">
 
-            {% for product in products %}
-            <!-- Individual Product Card -->
-            <div class="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+    <!-- LEFT SIDEBAR: FILTERS -->
+    <aside class="w-full md:w-1/4">
+        <form method="GET" action="{% url 'product_list' %}" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-8 sticky top-6">
 
-                <!-- Image Container with a subtle zoom on hover -->
-                <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-72 object-cover object-center group-hover:scale-105 transition-transform duration-500">
-                </div>
+            <!-- Search Bar -->
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Search</h3>
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Find a bag..." class="w-full border border-gray-300 rounded-md p-2 focus:ring-black">
+            </div>
 
-                <!-- Product Details -->
-                <div class="p-6 text-center">
-                    <h2 class="text-lg font-medium text-gray-900 mb-1">{{ product.name }}</h2>
-                    <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ product.description }}</p>
-                    <p class="text-xl font-semibold text-gray-900 mb-4">KES {{ product.price }}</p>
-
-                    <button class="w-full bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors">
-                        Add to Cart
-                    </button>
+            <!-- Categories -->
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Category</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center space-x-2">
+                        <input type="radio" name="category" value="" class="text-black focus:ring-black" {% if not request.GET.category %}checked{% endif %}>
+                        <span class="text-gray-700">All Categories</span>
+                    </label>
+                    {% for category in categories %}
+                    <label class="flex items-center space-x-2">
+                        <input type="radio" name="category" value="{{ category.slug }}" class="text-black focus:ring-black" {% if request.GET.category == category.slug %}checked{% endif %}>
+                        <span class="text-gray-700">{{ category.name }}</span>
+                    </label>
+                    {% endfor %}
                 </div>
             </div>
-            {% empty %}
-            <div class="col-span-full text-center py-20 text-gray-500">
-                <p>No handbags available at the moment. Please check back later!</p>
-            </div>
-            {% endfor %}
 
+            <!-- Price Brackets -->
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Price Range</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black">
+                    <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black">
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div>
+                <h3 class="font-medium text-gray-900 mb-3">Color</h3>
+                <select name="color" class="w-full border border-gray-300 rounded-md p-2 focus:ring-black">
+                    <option value="">All Colors</option>
+                    {% for value, label in color_choices %}
+                        <option value="{{ value }}" {% if request.GET.color == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition font-medium">Apply Filters</button>
+            <a href="{% url 'product_list' %}" class="block text-center text-sm text-gray-500 hover:text-black mt-3">Clear All</a>
+        </form>
+    </aside>
+
+    <!-- RIGHT MAIN: PRODUCT GRID -->
+    <main class="w-full md:w-3/4">
+
+        <!-- Sorting -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+            <span class="text-gray-600">{{ products|length }} Products Found</span>
+
+            <!-- We use a mini form that submits itself when changed -->
+            <form method="GET" action="{% url 'product_list' %}">
+                <!-- Keep existing filters active when sorting -->
+                {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+                {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+                {% if request.GET.color %}<input type="hidden" name="color" value="{{ request.GET.color }}">{% endif %}
+
+                <select name="sort" onchange="this.form.submit()" class="border-gray-300 rounded-md text-sm py-2 pl-3 pr-8 focus:ring-black">
+                    <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+                    <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                </select>
+            </form>
         </div>
+
+        <!-- The Grid -->
+        {% if products %}
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
+                {% for product in products %}
+                    {% include 'bagApp/partials/product_card.html' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-20 bg-gray-50 rounded-xl border border-gray-100">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No bags found</h3>
+                <p class="text-gray-500 mb-6">Try adjusting your filters or search term to find what you're looking for.</p>
+                <a href="{% url 'product_list' %}" class="text-black border-b border-black pb-1 hover:text-gray-600">Clear all filters</a>
+            </div>
+        {% endif %}
+
     </main>
+</div>
 
-</body>
-</html>
+{% endblock %}
