@@ -2,65 +2,56 @@
 
 {% block content %}
 
-
-    <div class="max-w-7xl mx-auto mt-10">
-        <h1 class="text-3xl font-serif text-gray-900 mb-8">Shopping Cart</h1>
+    <!-- Added px-4 so it doesn't touch the screen edges on mobile -->
+    <div id="cart-wrapper" class="max-w-7xl mx-auto mt-6 md:mt-10 px-4 mb-16">
+        <h1 class="text-2xl md:text-3xl font-serif text-gray-900 mb-6 md:mb-8">Shopping Cart</h1>
 
         {% if not cart_items %}
-            <div class="bg-white p-10 rounded-xl shadow-sm text-center">
+            <div class="bg-white p-10 rounded-xl shadow-sm text-center border border-gray-100">
                 <p class="text-xl text-gray-500 mb-6">Your cart is currently empty.</p>
                 <a href="{% url 'product_list' %}" class="inline-block bg-black text-white px-8 py-3 rounded-md hover:bg-gray-800 transition-colors">
                     Continue Shopping
                 </a>
             </div>
         {% else %}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
 
                 <!-- Cart Items (Left Side) -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="lg:col-span-2 space-y-4 md:space-y-6">
                     {% for cart_item in cart_items %}
-                    <div class="flex items-center justify-between bg-white p-6 rounded-xl shadow-sm">
+                    <!-- Changed to flex-col on mobile, sm:flex-row on larger screens -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
 
                         <!-- Image & Details -->
-                        <div class="flex items-center space-x-6">
-                            <div class="w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+                        <div class="flex items-center space-x-4 sm:space-x-6">
+                            <!-- Shrunk image slightly on mobile (w-20) -->
+                            <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                                 <img src="{{ cart_item.product.image.url }}" alt="{{ cart_item.product.name }}" class="w-full h-full object-cover">
                             </div>
                             <div>
-                                <h2 class="text-lg font-medium text-gray-900">{{ cart_item.product.name }}</h2>
+                                <h2 class="text-base sm:text-lg font-medium text-gray-900">{{ cart_item.product.name }}</h2>
                                 <p class="text-sm text-gray-500">KES {{ cart_item.product.price }}</p>
                             </div>
                         </div>
 
-                        <!-- Quantity & Subtotal -->
-                       <!-- Quantity, Subtotal & Actions -->
-                        <div class="flex flex-col items-end">
+                        <!-- Quantity, Subtotal & Actions -->
+                        <!-- Converted to a horizontal row on mobile, column on desktop -->
+                        <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-100 mt-2 sm:mt-0">
 
-                            <!-- Subtotal -->
-                            <p class="text-lg font-semibold text-gray-900 mb-4">KES {{ cart_item.sub_total }}</p>
+                            <!-- Subtotal (Moved to the left on mobile) -->
+                            <p class="text-base sm:text-lg font-semibold text-gray-900 sm:mb-4">KES {{ cart_item.sub_total }}</p>
 
-                            <!-- Quantity Controls -->
-                            <div class="flex items-center border border-gray-200 rounded-md mb-2">
-                                <!-- Minus Button -->
-                                <a href="{% url 'remove_cart_item' cart_item.product.id %}" class="px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">
-                                    -
-                                </a>
+                            <div class="flex flex-col items-end gap-2">
+                                <!-- Quantity Controls -->
+                                <div class="flex items-center border border-gray-200 rounded-md">
+                                    <a href="{% url 'remove_cart_item' cart_item.product.id %}" class="ajax-cart-update px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">-</a>
+                                    <span class="px-4 py-1 text-sm text-gray-800 border-l border-r border-gray-200">{{ cart_item.quantity }}</span>
+                                    <a href="{% url 'add_to_cart' cart_item.product.id %}" class="ajax-cart-update px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">+</a>
+                                </div>
 
-                                <!-- Current Quantity -->
-                                <span class="px-4 py-1 text-sm text-gray-800 border-l border-r border-gray-200">
-                                    {{ cart_item.quantity }}
-                                </span>
-
-                                <!-- Plus Button (Reuses our add_to_cart view!) -->
-                                <a href="{% url 'add_to_cart' cart_item.product.id %}" class="px-3 py-1 bg-gray-50 text-gray-600 hover:bg-gray-200 transition-colors">
-                                    +
-                                </a>
+                                <!-- Remove Completely Button -->
+                                <a href="{% url 'remove_cart_item_completely' cart_item.product.id %}" class="ajax-cart-update text-xs sm:text-sm text-red-500 hover:text-red-700 transition-colors">Remove</a>
                             </div>
-
-                            <!-- Remove Completely Button -->
-                            <a href="{% url 'remove_cart_item_completely' cart_item.product.id %}" class="text-sm text-red-500 hover:text-red-700 transition-colors">
-                                Remove
-                            </a>
 
                         </div>
 
@@ -69,29 +60,29 @@
                 </div>
 
                 <!-- Order Summary (Right Side) -->
-                <div class="bg-white p-8 rounded-xl shadow-sm h-fit">
-                    <h2 class="text-xl font-medium text-gray-900 mb-6">Order Summary</h2>
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-100 h-fit sticky top-24">
+                    <h2 class="text-lg sm:text-xl font-medium text-gray-900 mb-6">Order Summary</h2>
 
-                    <div class="flex justify-between text-gray-600 mb-4">
+                    <div class="flex justify-between text-sm sm:text-base text-gray-600 mb-4">
                         <span>Subtotal</span>
                         <span>KES {{ total }}</span>
                     </div>
 
-                    <div class="flex justify-between text-gray-600 mb-6 pb-6 border-b">
+                    <div class="flex justify-between text-sm sm:text-base text-gray-600 mb-6 pb-6 border-b border-gray-100">
                         <span>Shipping</span>
                         <span>Calculated at checkout</span>
                     </div>
 
-                    <div class="flex justify-between text-xl font-semibold text-gray-900 mb-8">
+                    <div class="flex justify-between text-lg sm:text-xl font-semibold text-gray-900 mb-8">
                         <span>Total</span>
                         <span>KES {{ total }}</span>
                     </div>
 
-                    <a href="{% url 'checkout' %}" class="block text-center w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 transition-colors text-lg font-medium">
+                    <a href="{% url 'checkout' %}" class="block text-center w-full bg-black text-white py-3 sm:py-4 rounded-md hover:bg-gray-800 transition-colors text-base sm:text-lg font-medium">
                             Proceed to Checkout
                     </a>
 
-                    <a href="{% url 'product_list' %}" class="block text-center text-sm text-gray-500 mt-4 hover:text-black">
+                    <a href="{% url 'product_list' %}" class="block text-center text-xs sm:text-sm text-gray-500 mt-4 hover:text-black">
                         or Continue Shopping
                     </a>
                 </div>
@@ -99,5 +90,81 @@
         {% endif %}
     </div>
 
+<script>
+    document.addEventListener('click', function(e) {
+        // 1. Check if the clicked element is one of our cart update buttons
+        const target = e.target.closest('.ajax-cart-update');
+        if (!target) return;
+
+        // 2. Stop the browser from reloading the page
+        e.preventDefault();
+
+        const url = target.href;
+        const cartWrapper = document.getElementById('cart-wrapper');
+
+        // 3. Give visual feedback (slight fade) so the user knows it's loading
+        cartWrapper.style.opacity = '0.5';
+        cartWrapper.style.pointerEvents = 'none';
+
+        // 4. Fetch the updated cart page in the background
+        fetch(url)
+        .then(response => response.text())
+        .then(html => {
+            // 5. Parse the returned HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // 6. Swap out the old cart HTML with the newly calculated cart HTML
+            const newCart = doc.getElementById('cart-wrapper');
+            if (newCart) {
+                cartWrapper.innerHTML = newCart.innerHTML;
+            }
+
+            // Restore visibility and clicking
+            cartWrapper.style.opacity = '1';
+            cartWrapper.style.pointerEvents = 'auto';
+
+            // 7. Update the global cart badge in the navigation bar
+            const newBadge = doc.getElementById('cart-icon-count');
+            const oldBadge = document.getElementById('cart-icon-count');
+            if (newBadge && oldBadge) {
+                oldBadge.textContent = newBadge.textContent;
+            }
+
+            // 8. Trigger our existing Toast Notification safely
+            showCartToast('Cart updated successfully');
+        })
+        .catch(err => {
+            console.error('Error updating cart:', err);
+            cartWrapper.style.opacity = '1';
+            cartWrapper.style.pointerEvents = 'auto';
+        });
+    });
+
+    // Helper function to reuse the toast UI we built earlier
+    function showCartToast(message) {
+        const toast = document.getElementById('cart-toast');
+        const messageEl = document.getElementById('toast-message');
+        const iconEl = document.getElementById('toast-icon');
+        const linkEl = document.getElementById('toast-cart-link');
+
+        if (!toast || !messageEl || !iconEl) return;
+
+        messageEl.textContent = message;
+        toast.className = "fixed top-10 left-1/2 transform -translate-x-1/2 transition-all duration-300 z-[100] px-6 py-4 rounded-md shadow-2xl flex items-center gap-4 text-white font-medium bg-black";
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+
+        // Hide the "View Cart" button since we are already on the cart page
+        if (linkEl) linkEl.classList.add('hidden');
+
+        // Slide the toast down
+        toast.classList.remove('-translate-y-[200%]', 'opacity-0');
+
+        // Slide it back up after 2.5 seconds
+        setTimeout(() => {
+            toast.classList.add('-translate-y-[200%]', 'opacity-0');
+        }, 2500);
+    }
+</script>
 
 {% endblock %}

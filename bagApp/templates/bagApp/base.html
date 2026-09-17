@@ -9,38 +9,25 @@
 <body class="bg-gray-50 text-gray-800 font-sans flex flex-col min-h-screen">
 
 <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-8">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-y-4 md:gap-y-6">
 
-        <!-- Logo -->
-        <a href="{% url 'home' %}" class="text-2xl font-serif text-gray-900 tracking-wide flex-shrink-0">
-            The Handbag Collection
-        </a>
+        <!-- 1. MOBILE: Hamburger Button (Left) -->
+        <div class="md:hidden flex-none order-1">
+            <button id="mobile-menu-btn" class="text-gray-900 hover:text-gray-600 focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
 
-        <!-- NEW: Navigation Links (Home & Categories) -->
-        <nav class="hidden md:flex items-center gap-6 font-medium text-gray-700 ml-4">
-            <a href="{% url 'home' %}" class="hover:text-black transition">Home</a>
+        <!-- 2. ALL SCREENS: Logo (Mobile Center, Desktop Left) -->
+        <!-- flex-1 on mobile ensures it stays perfectly centered between the hamburger and cart -->
+        <div class="flex-1 md:flex-none flex justify-center md:justify-start order-2 md:order-1">
+            <a href="{% url 'home' %}" class="text-xl md:text-2xl font-serif text-gray-900 tracking-wide flex-shrink-0">
+                The Handbag Collection
+            </a>
+        </div>
 
-            <!-- Category Dropdown -->
-            <div class="relative group">
-                <!-- Added extra padding to the bottom (pb-6) so the mouse doesn't fall off the dropdown -->
-                <button class="hover:text-black transition flex items-center gap-1 pb-6 -mb-6">
-                    Categories
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-
-                <!-- The Dropdown Menu -->
-                <div class="absolute top-full left-0 mt-4 w-48 bg-white border border-gray-100 shadow-xl rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2 overflow-hidden">
-                    <a href="{% url 'product_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black font-medium border-b border-gray-100">Shop All Bags</a>
-
-                    {% for category in nav_categories %}
-                        <a href="{% url 'product_list' %}?category={{ category.slug }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-black">{{ category.name }}</a>
-                    {% endfor %}
-                </div>
-            </div>
-        </nav>
-
-        <!-- Global Search Bar with Dropdown -->
-        <div class="relative flex-grow max-w-xl hidden md:block group">
+        <!-- 3. ALL SCREENS: Global Search Bar (Mobile Bottom Row, Desktop Center) -->
+        <div class="w-full md:w-auto md:flex-grow md:max-w-xl mx-auto md:px-8 order-4 md:order-2 relative group">
             <form method="GET" action="{% url 'product_list' %}" class="relative z-20">
                 <input type="text" name="q" placeholder="Search for a style, color, or category..."
                        class="w-full bg-gray-100 border-transparent rounded-full py-2.5 pl-5 pr-10 focus:bg-white focus:border-black focus:ring-0 text-sm"
@@ -50,10 +37,9 @@
                 </button>
             </form>
 
-            <!-- CORRECTED: Changed peer-focus to group-focus-within -->
-            <div class="absolute top-full left-0 right-0 bg-white border border-gray-200 shadow-xl rounded-b-xl mt-1 opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible hover:opacity-100 hover:visible transition-all duration-200 z-10 pt-4 pb-4 px-6">
-                <div class="grid grid-cols-2 gap-6">
-                    <!-- Trending Suggestions -->
+            <!-- Search Suggestions -->
+            <div class="absolute top-full left-0 right-0 md:left-8 md:right-8 bg-white border border-gray-200 shadow-xl rounded-b-xl mt-1 opacity-0 invisible group-focus-within:opacity-100 group-focus-within:visible hover:opacity-100 hover:visible transition-all duration-200 z-10 pt-4 pb-4 px-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Trending Searches</h4>
                         <ul class="space-y-2">
@@ -62,7 +48,6 @@
                             {% endfor %}
                         </ul>
                     </div>
-                    <!-- Popular Suggestions -->
                     <div>
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Right Now</h4>
                         <ul class="space-y-2">
@@ -75,30 +60,60 @@
             </div>
         </div>
 
-        <!-- Right Side (Cart, Contact) -->
-        <div class="flex items-center gap-4 flex-shrink-0">
-            <a href="{% url 'track_order' %}" class="text-gray-600 hover:text-black font-medium transition-colors">
-                Track Order
-            </a>
-            <!-- Contact Link -->
-            <a href="{% url 'contact' %}" class="text-gray-600 hover:text-black font-medium transition-colors">
-                Contact
-            </a>
-
-            <!-- The Cart Icon -->
+        <!-- 4. ALL SCREENS: Cart Icon (Right) -->
+        <div class="flex-none flex justify-end items-center order-3">
             <a href="{% url 'cart_detail' %}" class="relative inline-block text-gray-900 hover:text-gray-600 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                 </svg>
-                <span id="cart-icon-count" class="absolute -top-2 -right-2 bg-black text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
-                    {{ cart_count }}
-                </span>
+                <span id="cart-icon-count" class="absolute -top-2 -right-2 bg-black text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm">{{ cart_count }}</span>
             </a>
         </div>
-    </div>
-</header>
 
-    <!-- Add this right below your <header> and right above your <main> -->
+        <!-- 5. DESKTOP ONLY: Navigation Links (Bottom Row, Centered) -->
+        <!-- Added w-full and justify-center to drop this to a new line and center it -->
+        <nav class="hidden md:flex w-full order-5 justify-center items-center gap-10 font-medium text-gray-700 mt-2">
+            <a href="{% url 'home' %}" class="hover:text-black transition">Home</a>
+
+            <!-- Category Dropdown -->
+            <div class="relative group">
+                <button class="hover:text-black transition flex items-center gap-1 pb-6 -mb-6">
+                    Categories
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <!-- The Dropdown Menu (Centered underneath the button) -->
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-4 w-48 bg-white border border-gray-100 shadow-xl rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2 overflow-hidden">
+                    <a href="{% url 'product_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-black font-medium border-b border-gray-100">Shop All Bags</a>
+                    {% for category in nav_categories %}
+                        <a href="{% url 'product_list' %}?category={{ category.slug }}" class="block px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-black">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <a href="{% url 'track_order' %}" class="hover:text-black transition">Track Order</a>
+            <a href="{% url 'contact' %}" class="hover:text-black transition">Contact</a>
+        </nav>
+
+        <!-- 6. MOBILE ONLY: Hamburger Menu Content -->
+        <div id="mobile-menu" class="hidden w-full order-6 flex-col border-t border-gray-100 mt-3 pt-3 pb-2 space-y-1 bg-white">
+            <a href="{% url 'home' %}" class="block px-2 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Home</a>
+
+            <div class="px-2 py-3 text-base font-medium text-gray-900">
+                <span class="block mb-3 text-sm text-gray-500 uppercase tracking-wider">Categories</span>
+                <div class="flex flex-col space-y-4 pl-4 border-l-2 border-gray-200">
+                    <a href="{% url 'product_list' %}" class="text-sm text-gray-600 hover:text-black block">Shop All Bags</a>
+                    {% for category in nav_categories %}
+                        <a href="{% url 'product_list' %}?category={{ category.slug }}" class="text-sm text-gray-600 hover:text-black block">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <a href="{% url 'track_order' %}" class="block px-2 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Track Order</a>
+            <a href="{% url 'contact' %}" class="block px-2 py-3 text-base font-medium text-gray-900 hover:bg-gray-50 rounded-md">Contact</a>
+        </div>
+
+    </div>
+</header>    <!-- Add this right below your <header> and right above your <main> -->
     <div class="max-w-7xl mx-auto px-4 mt-4">
         {% if messages %}
             {% for message in messages %}
@@ -209,6 +224,17 @@
                 localStorage.setItem('saved_cart_count', cartBadge.textContent.trim());
             }
         });
+    // NEW: Mobile Hamburger Menu Toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileBtn && mobileMenu) {
+            mobileBtn.addEventListener('click', () => {
+                // Toggle between 'hidden' and 'flex' to show/hide the menu
+                mobileMenu.classList.toggle('hidden');
+                mobileMenu.classList.toggle('flex');
+            });
+        }
     </script>
 
 </body>

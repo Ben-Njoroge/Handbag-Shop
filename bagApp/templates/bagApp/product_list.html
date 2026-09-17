@@ -6,85 +6,117 @@
     <h1 class="text-3xl font-serif text-gray-900">Shop The Collection</h1>
 </div>
 
-<div class="max-w-7xl mx-auto px-4 mb-16 flex flex-col md:flex-row gap-10">
+<div class="max-w-7xl mx-auto px-4 mb-16 flex flex-col md:flex-row gap-10 relative">
 
-    <!-- LEFT SIDEBAR: FILTERS -->
-    <aside class="w-full md:w-1/4">
-        <form method="GET" action="{% url 'product_list' %}" class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-8 sticky top-6">
+    <!-- LEFT SIDEBAR: FILTERS (Transforms into a Drawer on Mobile) -->
+    <!-- Added fixed overlay classes for mobile, switching to relative block for md+ screens -->
+    <aside id="filter-modal" class="fixed inset-0 z-[100] hidden md:relative md:inset-auto md:z-auto md:block md:w-1/4">
 
-            <!-- Search Bar -->
-            <div>
-                <h3 class="font-medium text-gray-900 mb-3">Search</h3>
-                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Find a bag..." class="w-full border border-gray-300 rounded-md p-2 focus:ring-black">
+        <!-- Dark Background Overlay (Mobile Only) -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 md:hidden backdrop-close" aria-hidden="true"></div>
+
+        <!-- The Drawer Panel (Slides in from right on mobile, standard column on desktop) -->
+        <div class="absolute inset-y-0 right-0 w-full max-w-xs bg-white shadow-xl flex flex-col md:relative md:w-full md:shadow-none md:bg-transparent">
+
+            <!-- Mobile Drawer Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 md:hidden">
+                <h2 class="text-lg font-bold text-gray-900 tracking-wider">FILTERS</h2>
+                <button type="button" id="close-filter-btn" class="text-gray-400 hover:text-black focus:outline-none">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
             </div>
 
-            <!-- Categories -->
-            <div>
-                <h3 class="font-medium text-gray-900 mb-3">Category</h3>
-                <div class="space-y-2">
-                    <label class="flex items-center space-x-2">
-                        <input type="radio" name="category" value="" class="text-black focus:ring-black" {% if not request.GET.category %}checked{% endif %}>
-                        <span class="text-gray-700">All Categories</span>
-                    </label>
-                    {% for category in categories %}
-                    <label class="flex items-center space-x-2">
-                        <input type="radio" name="category" value="{{ category.slug }}" class="text-black focus:ring-black" {% if request.GET.category == category.slug %}checked{% endif %}>
-                        <span class="text-gray-700">{{ category.name }}</span>
-                    </label>
-                    {% endfor %}
+            <!-- The Form -->
+            <!-- Adjusted height and overflow for mobile scrolling -->
+            <form method="GET" action="{% url 'product_list' %}" class="bg-white p-6 md:rounded-xl md:border md:border-gray-200 md:shadow-sm space-y-8 sticky top-6 h-full overflow-y-auto md:h-auto md:overflow-visible">
+
+                <!-- Search Bar -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-3">Search</h3>
+                    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Find a bag..." class="w-full border border-gray-300 rounded-md p-2 focus:ring-black focus:border-black">
                 </div>
-            </div>
 
-            <!-- Price Brackets -->
-            <div>
-                <h3 class="font-medium text-gray-900 mb-3">Price Range</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black">
-                    <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black">
+                <!-- Categories -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-3">Category</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="category" value="" class="text-black focus:ring-black" {% if not request.GET.category %}checked{% endif %}>
+                            <span class="text-gray-700 hover:text-black">All Categories</span>
+                        </label>
+                        {% for category in categories %}
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" name="category" value="{{ category.slug }}" class="text-black focus:ring-black" {% if request.GET.category == category.slug %}checked{% endif %}>
+                            <span class="text-gray-700 hover:text-black">{{ category.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
 
-            <!-- Colors -->
-            <div>
-                <h3 class="font-medium text-gray-900 mb-3">Color</h3>
-                <select name="color" class="w-full border border-gray-300 rounded-md p-2 focus:ring-black">
-                    <option value="">All Colors</option>
-                    {% for value, label in color_choices %}
-                        <option value="{{ value }}" {% if request.GET.color == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                <!-- Price Brackets -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-3">Price Range</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black focus:border-black">
+                        <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max KES" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-black focus:border-black">
+                    </div>
+                </div>
 
-            <button type="submit" class="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition font-medium">Apply Filters</button>
-            <a href="{% url 'product_list' %}" class="block text-center text-sm text-gray-500 hover:text-black mt-3">Clear All</a>
-        </form>
+                <!-- Colors -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-3">Color</h3>
+                    <select name="color" class="w-full border border-gray-300 rounded-md p-2 focus:ring-black focus:border-black">
+                        <option value="">All Colors</option>
+                        {% for value, label in color_choices %}
+                            <option value="{{ value }}" {% if request.GET.color == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="pb-10 md:pb-0">
+                    <button type="submit" class="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition font-medium">Apply Filters</button>
+                    <a href="{% url 'product_list' %}" class="block text-center text-sm text-gray-500 hover:text-black mt-4">Clear All</a>
+                </div>
+            </form>
+        </div>
     </aside>
 
     <!-- RIGHT MAIN: PRODUCT GRID -->
     <main class="w-full md:w-3/4">
 
-        <!-- Sorting -->
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-            <span class="text-gray-600">{{ products|length }} Products Found</span>
+        <!-- Sorting & Mobile Filter Toggle -->
+        <div class="flex flex-wrap justify-between items-center mb-6 pb-4 border-b border-gray-200 gap-y-4">
+            <span class="text-gray-600 hidden md:inline-block">{{ products|length }} Products Found</span>
 
-            <!-- We use a mini form that submits itself when changed -->
-            <form method="GET" action="{% url 'product_list' %}">
-                <!-- Keep existing filters active when sorting -->
-                {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
-                {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
-                {% if request.GET.color %}<input type="hidden" name="color" value="{{ request.GET.color }}">{% endif %}
+            <!-- NEW: Action buttons container for mobile -->
+            <div class="flex justify-between items-center w-full md:w-auto gap-4">
 
-                <select name="sort" onchange="this.form.submit()" class="border-gray-300 rounded-md text-sm py-2 pl-3 pr-8 focus:ring-black">
-                    <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
-                    <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
-                    <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
-                </select>
-            </form>
+                <!-- MOBILE FILTER BUTTON -->
+                <button type="button" id="mobile-filter-btn" class="md:hidden flex items-center gap-2 border border-gray-300 rounded-md py-2 px-4 text-sm font-medium text-gray-900 hover:bg-gray-50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    Filters
+                </button>
+
+                <!-- Sorting Dropdown -->
+                <form method="GET" action="{% url 'product_list' %}" class="ml-auto">
+                    {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+                    {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+                    {% if request.GET.color %}<input type="hidden" name="color" value="{{ request.GET.color }}">{% endif %}
+
+                    <select name="sort" onchange="this.form.submit()" class="border-gray-300 rounded-md text-sm py-2 pl-3 pr-8 focus:ring-black focus:border-black cursor-pointer">
+                        <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest Arrivals</option>
+                        <option value="price_low" {% if request.GET.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_high" {% if request.GET.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </form>
+            </div>
+            <!-- Display count below on mobile only -->
+            <span class="text-gray-500 text-sm w-full text-left md:hidden">{{ products|length }} Products Found</span>
         </div>
 
         <!-- The Grid -->
         {% if products %}
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
                 {% for product in products %}
                     {% include 'bagApp/partials/product_card.html' %}
                 {% endfor %}
@@ -103,5 +135,34 @@
 
     </main>
 </div>
+
+<!-- JavaScript to toggle the mobile filter drawer -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterModal = document.getElementById('filter-modal');
+        const openBtn = document.getElementById('mobile-filter-btn');
+        const closeBtn = document.getElementById('close-filter-btn');
+        const backdrops = document.querySelectorAll('.backdrop-close');
+
+        // Open Modal
+        if (openBtn && filterModal) {
+            openBtn.addEventListener('click', () => {
+                filterModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            });
+        }
+
+        // Close Modal
+        const closeModal = () => {
+            if (filterModal) {
+                filterModal.classList.add('hidden');
+                document.body.style.overflow = ''; // Restore background scrolling
+            }
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        backdrops.forEach(backdrop => backdrop.addEventListener('click', closeModal));
+    });
+</script>
 
 {% endblock %}
