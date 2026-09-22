@@ -88,9 +88,9 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ['name', 'email', 'subject', 'created_at']
-    search_fields = ['name', 'email', 'subject']
-    list_filter = ['created_at']
+    list_display = ('subject', 'name', 'email', 'is_resolved', 'created_at')
+    list_filter = ('is_resolved', 'created_at')
+    list_editable = ('is_resolved',)
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):

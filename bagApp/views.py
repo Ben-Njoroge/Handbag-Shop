@@ -4,6 +4,8 @@ from django.contrib import messages
 from .models import Product, Cart, CartItem, Order, OrderItem, ShippingLocation, ContactMessage, Category
 from django.db.models import Case, When, Value, BooleanField
 from django.http import JsonResponse
+from django.core.mail import send_mail, EmailMessage
+from django.conf import settings
 
 
 def home(request):
@@ -234,18 +236,57 @@ def checkout(request):
             total_amount=grand_total
         )
 
+        # We will build a text list of the bags to include in the email
+        items_ordered_text = ""
+
         for item in cart_items:
             OrderItem.objects.create(
                 order=order, product=item.product, price=item.product.price, quantity=item.quantity
             )
+            items_ordered_text += f"- {item.quantity}x {item.product.name} (KES {item.product.price})\n"
 
         cart_items.delete()
+
+        # --- FIRE INSTANT EMAIL ALERT ---
+        subject = f'🚨 NEW ORDER: KES {order.total_amount} via M-Pesa'
+        message = f"""
+You just received a new order!
+
+CUSTOMER DETAILS
+Name: {order.full_name}
+Phone: {order.phone_number}
+Location: {shipping_location.name}
+Notes: {order.delivery_notes if order.delivery_notes else 'None'}
+
+ORDER SUMMARY
+{items_ordered_text}
+Delivery Fee: KES {order.delivery_fee_paid}
+Total Amount: KES {order.total_amount}
+
+M-PESA VERIFICATION
+Code: {order.mpesa_receipt_code}
+
+Log into your Django Admin to verify the payment and change status to Paid:
+https://your-vercel-domain.vercel.app/admin/
+"""
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.DEFAULT_FROM_EMAIL],
+                # Sending it to your own email
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Email failed to send: {e}")
+        # ---------------------------------
+
         messages.success(request, 'Your order was received! You can track it here.')
         return redirect('track_order')
 
     return render(request, 'bagApp/checkout.html',
                   {'cart_items': cart_items, 'cart_total': cart_total, 'locations': locations})
-
 
 def track_order(request):
     order = None
@@ -265,12 +306,47 @@ def track_order(request):
 
 def contact(request):
     if request.method == 'POST':
+        # 1. Extract the data into variables first so we can use them twice
+        name = request.POST.get('name')
+        customer_email = request.POST.get('email')
+        subject_line = request.POST.get('subject')
+        message_text = request.POST.get('message')
+
+        # 2. Save the permanent backup to your Django database
         ContactMessage.objects.create(
-            name=request.POST.get('name'),
-            email=request.POST.get('email'),
-            subject=request.POST.get('subject'),
-            message=request.POST.get('message')
+            name=name,
+            email=customer_email,
+            subject=subject_line,
+            message=message_text
         )
+
+        # 3. Format the email alert for your phone
+        email_subject = f"NEW WEBSITE MESSAGE: {subject_line}"
+        email_body = f"""
+You have a new message from your store's Contact Page!
+
+CUSTOMER DETAILS
+Name: {name}
+Email: {customer_email}
+
+MESSAGE
+{message_text}
+"""
+
+        # 4. Fire the instant email alert with the "Reply-To" trick
+        try:
+            email = EmailMessage(
+                subject=email_subject,
+                body=email_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[settings.DEFAULT_FROM_EMAIL],  # Sending it to your own inbox
+                reply_to=[customer_email]  # This ensures hitting 'Reply' in Gmail emails the customer
+            )
+            email.send(fail_silently=True)
+        except Exception as e:
+            print(f"Contact email failed to send: {e}")
+
+        # 5. Show success message and redirect
         messages.success(request, 'Thank you! Your message has been sent successfully.')
         return redirect('contact')
 

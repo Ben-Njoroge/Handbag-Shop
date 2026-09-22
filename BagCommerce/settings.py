@@ -139,11 +139,22 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+# Modern Django 6.0+ Email Configuration
 MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    "default": {
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "use_tls": True,
+            "username": config("EMAIL_USER"),
+            "password": config("EMAIL_PASSWORD"), # Paste your 16-letter App Password here
+        },
     },
 }
+
+# This tells Django who the email is officially "From"
+DEFAULT_FROM_EMAIL = config("EMAIL_USER")
 # Cloudinary Credentials
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
