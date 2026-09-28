@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib import messages
-from .models import Product, Cart, CartItem, Order, OrderItem, ShippingLocation, ContactMessage, Category
+from .models import Product, Cart, CartItem, Order, OrderItem, ShippingLocation, ContactMessage, Category, Wishlist, WishlistItem
 from django.db.models import Case, When, Value, BooleanField
 from django.http import JsonResponse
 from django.core.mail import send_mail, EmailMessage
@@ -86,6 +86,7 @@ def _cart_id(request):
 
 
 # 2. The main logic to add a handbag to the cart
+# 2. The main logic to add a handbag to the cart
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
@@ -100,7 +101,6 @@ def add_to_cart(request, product_id):
     if product.stock_quantity <= 0:
         msg = f"Sorry, the {product.name} is completely out of stock."
         if is_ajax:
-            # Try to get the cart just to send the current count back
             try:
                 cart = Cart.objects.get(cart_id=_cart_id(request))
                 count = get_cart_count(cart)
@@ -119,13 +119,28 @@ def add_to_cart(request, product_id):
         cart = Cart.objects.create(cart_id=_cart_id(request))
         cart.save()
 
+    # Capture requested quantity and action type from the form
+    requested_quantity = 1
+    action = 'add_to_cart'
+
+    if request.method == 'POST':
+        try:
+            requested_quantity = int(request.POST.get('quantity', 1))
+        except ValueError:
+            requested_quantity = 1
+        action = request.POST.get('submit_action', 'add_to_cart')
+
     try:
         cart_item = CartItem.objects.get(product=product, cart=cart)
-        # 2. Check stock limit
-        if cart_item.quantity < product.stock_quantity:
-            cart_item.quantity += 1
+        # 2. Check stock limit against existing quantity + newly requested quantity
+        if (cart_item.quantity + requested_quantity) <= product.stock_quantity:
+            cart_item.quantity += requested_quantity
             cart_item.save()
             msg = f"Updated {product.name} quantity in your cart."
+
+            if action == 'buy_now':
+                return redirect('cart_detail')
+
             if is_ajax:
                 return JsonResponse({'status': 'success', 'message': msg, 'cart_count': get_cart_count(cart)})
             messages.success(request, msg)
@@ -136,20 +151,32 @@ def add_to_cart(request, product_id):
             messages.warning(request, msg)
 
     except CartItem.DoesNotExist:
-        # 3. Create new cart item
-        if product.stock_quantity > 0:
+        # 3. Create new cart item with the requested quantity
+        if requested_quantity <= product.stock_quantity:
             cart_item = CartItem.objects.create(
                 product=product,
-                quantity=1,
+                quantity=requested_quantity,
                 cart=cart,
             )
             cart_item.save()
             msg = f"Added {product.name} to your cart."
+
+            if action == 'buy_now':
+                return redirect('cart_detail')
+
             if is_ajax:
                 return JsonResponse({'status': 'success', 'message': msg, 'cart_count': get_cart_count(cart)})
             messages.success(request, msg)
+        else:
+            msg = f"You can only add a maximum of {product.stock_quantity} for {product.name}."
+            if is_ajax:
+                return JsonResponse({'status': 'warning', 'message': msg, 'cart_count': get_cart_count(cart)})
+            messages.warning(request, msg)
 
-    # Fallback
+    # Fallback return
+    if action == 'buy_now':
+        return redirect('cart_detail')
+
     current_page = request.META.get('HTTP_REFERER')
     if current_page:
         return redirect(current_page)
@@ -351,3 +378,74 @@ MESSAGE
         return redirect('contact')
 
     return render(request, 'bagApp/contact.html')
+
+
+# --- WISHLIST LOGIC ---
+
+def _wishlist_id(request):
+    wishlist_id = request.session.session_key
+    if not wishlist_id:
+        wishlist_id = request.session.create()
+    return wishlist_id
+
+
+def add_to_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    def get_wishlist_count(current_wishlist):
+        if not current_wishlist:
+            return 0
+        return WishlistItem.objects.filter(wishlist=current_wishlist, is_active=True).count()
+
+    # Get or create wishlist
+    try:
+        wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
+    except Wishlist.DoesNotExist:
+        wishlist = Wishlist.objects.create(wishlist_id=_wishlist_id(request))
+
+    # Check if item is already in wishlist
+    try:
+        wishlist_item = WishlistItem.objects.get(product=product, wishlist=wishlist)
+        msg = f"{product.name} is already in your wishlist."
+
+        # If AJAX, return the JSON for the toast. If not, fallback to normal messages.
+        if is_ajax:
+            return JsonResponse({'status': 'warning', 'message': msg, 'wishlist_count': get_wishlist_count(wishlist)})
+        messages.warning(request, msg)
+
+    except WishlistItem.DoesNotExist:
+        # Create new wishlist item
+        WishlistItem.objects.create(product=product, wishlist=wishlist)
+        msg = f"Added {product.name} to your wishlist."
+
+        if is_ajax:
+            return JsonResponse({'status': 'success', 'message': msg, 'wishlist_count': get_wishlist_count(wishlist)})
+        messages.success(request, msg)
+
+    # Fallback redirect if Javascript fails
+    current_page = request.META.get('HTTP_REFERER')
+    return redirect(current_page) if current_page else redirect('product_list')
+
+
+def wishlist_detail(request):
+    try:
+        wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
+        wishlist_items = WishlistItem.objects.filter(wishlist=wishlist, is_active=True).order_by('-date_added')
+    except Wishlist.DoesNotExist:
+        wishlist_items = None
+
+    return render(request, 'bagApp/wishlist.html', {'wishlist_items': wishlist_items})
+
+
+def remove_from_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    try:
+        wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
+        wishlist_item = WishlistItem.objects.get(product=product, wishlist=wishlist)
+        wishlist_item.delete()
+        messages.success(request, f"Removed {product.name} from your wishlist.")
+    except (Wishlist.DoesNotExist, WishlistItem.DoesNotExist):
+        pass
+
+    return redirect('wishlist')

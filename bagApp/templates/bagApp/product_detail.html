@@ -7,14 +7,14 @@
             <div class="grid grid-cols-1 md:grid-cols-2">
 
             <!-- Product Image -->
-            <div class="bg-gray-100">
+            <div class="bg-gray-100 h-72 sm:h-96 md:h-auto">
                 <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover object-center">
             </div>
 
             <!-- Product Details -->
             <div class="p-5 sm:p-8 md:p-10 flex flex-col justify-center">
                 <!-- Smart Back Button -->
-                <button onclick="history.back()" class="text-sm text-gray-500 hover:text-black mb-8 flex items-center gap-2 group transition">
+                <button onclick="history.back()" class="text-sm text-gray-500 hover:text-black mb-6 md:mb-8 flex items-center gap-2 group transition w-fit">
                     <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -22,23 +22,146 @@
                 </button>
 
                 <h1 class="text-2xl sm:text-3xl md:text-4xl font-serif text-gray-900 mb-3 md:mb-4">{{ product.name }}</h1>
-                    <p class="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-5 md:mb-6">KES {{ product.price }}</p>
+                <p class="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-5 md:mb-6">KES {{ product.price }}</p>
 
-                    <div class="prose text-sm sm:text-base text-gray-600 mb-6 md:mb-8">
-                        <p>{{ product.description }}</p>
-                    </div>
+                <div class="prose text-sm sm:text-base text-gray-600 mb-6 md:mb-8">
+                    <p>{{ product.description }}</p>
+                </div>
 
                 <p class="text-sm text-gray-500 mb-6">In Stock: {{ product.stock_quantity }}</p>
 
-                        <form action="{% url 'add_to_cart' product.id %}" method="POST" class="ajax-cart-form">
-            {% csrf_token %}
-            <button type="submit" class="block text-center w-full bg-black text-white py-4 rounded-md hover:bg-gray-800 transition-colors text-lg font-medium">
-                Add to Cart
-            </button>
-        </form>
+<!-- === PURCHASE ACTIONS SECTION === -->
+                <div class="space-y-3">
+
+                    <!-- 1. CART & BUY NOW FORM -->
+                    <form action="{% url 'add_to_cart' product.id %}" method="POST" class="ajax-cart-form space-y-3">
+                        {% csrf_token %}
+                        <!-- Hidden input to track the clicked button -->
+                        <input type="hidden" name="submit_action" id="action_input" value="add_to_cart">
+
+                        <!-- ROW 1: Quantity + Add to Cart -->
+                        <div class="flex items-center gap-3">
+                            <!-- Quantity Selector -->
+                            <div class="flex items-center w-28 md:w-32 border border-gray-300 rounded-md h-12 bg-white overflow-hidden flex-shrink-0">
+                                <button type="button" onclick="document.getElementById('qty_input').stepDown()" class="w-10 h-full text-gray-600 hover:bg-gray-100 flex justify-center items-center text-lg font-medium transition-colors">-</button>
+                                <input type="number" id="qty_input" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}" class="w-full h-full text-center border-none focus:ring-0 p-0 text-gray-900 font-medium">
+                                <button type="button" onclick="document.getElementById('qty_input').stepUp()" class="w-10 h-full text-gray-600 hover:bg-gray-100 flex justify-center items-center text-lg font-medium transition-colors">+</button>
+                            </div>
+
+                            <!-- Add to Cart (Fills remaining space) -->
+                            <button type="submit" onclick="document.getElementById('action_input').value='add_to_cart';" class="flex-1 h-12 bg-white border border-black text-black rounded-md hover:bg-gray-50 transition-colors text-sm font-medium">
+                                Add to Cart
+                            </button>
+                        </div>
+
+                        <!-- ROW 2: Buy Now (Full width) -->
+                        <button type="button" onclick="document.getElementById('action_input').value='buy_now'; this.form.submit();" class="w-full h-12 bg-black border border-black text-white rounded-md hover:bg-gray-800 transition-colors text-sm font-medium">
+                            Buy Now
+                        </button>
+                    </form>
+
+                    <!-- ROW 3: WISHLIST FORM (Lightweight text link) -->
+                    <form action="{% url 'add_to_wishlist' product.id %}" method="POST" class="ajax-cart-form pt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="flex items-center justify-center gap-2 w-full text-gray-500 py-2 hover:text-red-500 transition-colors text-sm font-medium group bg-transparent border-none">
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                            </svg>
+                            Save to Wishlist
+                        </button>
+                    </form>
+
+                </div>
+                <!-- === END PURCHASE ACTIONS SECTION === -->
+
+                <!-- Social Share Divider -->
+                    <!-- Social Share Divider -->
+                    <div class="mt-8 pt-6 border-t border-gray-100 flex items-center gap-3">
+
+                        <!-- 1. Secondary: Trigger Custom Modal (Square Button Left) -->
+                        <button type="button" onclick="openShareModal()" title="More Share Options" class="w-12 h-12 flex-shrink-0 flex items-center justify-center border border-gray-300 rounded-md bg-white text-gray-500 hover:text-black hover:border-black transition-colors group">
+                            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                            </svg>
+                        </button>
+
+                        <!-- 2. Primary: WhatsApp Share (Rectangular Button Right) -->
+                        <a href="https://api.whatsapp.com/send?text=Check%20out%20this%20{{ product.name|urlencode }}%20at%20{{ request.build_absolute_uri }}" target="_blank" class="flex-1 h-12 flex items-center justify-center gap-2 border border-gray-300 rounded-md bg-white text-gray-900 font-medium hover:text-green-600 hover:border-green-600 hover:bg-green-50 transition-all group">
+                            <svg class="w-5 h-5 transition-transform group-hover:scale-110 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12.031 0C5.385 0 0 5.388 0 12.036c0 2.65.69 5.23 2.008 7.5L.65 24l4.606-1.21c2.195 1.185 4.675 1.81 7.234 1.81h.004c6.643 0 12.029-5.389 12.029-12.035C24.52 5.836 18.675 0 12.031 0zm0 22.428h-.002c-2.247 0-4.453-.604-6.386-1.751l-.458-.272-3.418.897.914-3.332-.298-.474a9.986 9.986 0 0 1-1.527-5.46C.856 5.86 6.224.49 12.033.49c2.956 0 5.735 1.151 7.825 3.243a11.026 11.026 0 0 1 3.243 7.828c0 6.177-5.372 11.167-11.07 11.167zm6.06-8.275c-.332-.167-1.966-.97-2.271-1.08-.305-.11-.527-.167-.749.167-.221.334-.858 1.08-1.052 1.302-.194.223-.388.25-.72.084-.332-.167-1.405-.518-2.677-1.656-.99-.885-1.657-1.978-1.851-2.311-.194-.333-.021-.513.145-.68.15-.15.333-.388.499-.582.166-.194.222-.333.333-.555.11-.223.055-.418-.028-.584-.083-.167-.749-1.808-1.026-2.474-.271-.65-.546-.56-.749-.571-.194-.01-.416-.01-.638-.01-.222 0-.583.084-.888.417-.305.334-1.165 1.14-1.165 2.78s1.193 3.225 1.359 3.447c.166.223 2.348 3.585 5.686 5.025 3.338 1.44 3.338.959 3.948.889.61-.07 1.966-.803 2.243-1.58.277-.777.277-1.443.194-1.58-.083-.138-.305-.221-.638-.387z"/>
+                            </svg>
+                            Share on WhatsApp
+                        </a>
+
+                    </div>
+
             </div>
             </div>
         </div>
     </div>
+<!-- === CUSTOM SHARE MODAL === -->
+    <div id="custom-share-modal" class="fixed inset-0 z-[150] hidden">
+
+        <!-- Dark Backdrop (Clicking it closes the modal) -->
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity cursor-pointer" onclick="closeShareModal()"></div>
+
+        <!-- Top Right Close Button -->
+        <button onclick="closeShareModal()" class="absolute top-6 right-6 md:top-10 md:right-10 text-white hover:text-gray-300 transition-colors z-10 cursor-pointer">
+            <svg class="w-8 h-8 md:w-10 md:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <!-- Centered White Content Box -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-8 py-8 md:px-12 md:py-10 rounded-sm shadow-2xl z-10">
+
+            <div class="flex items-center gap-6 md:gap-8">
+                <!-- Facebook -->
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" target="_blank" title="Share on Facebook" class="text-black hover:text-blue-600 transition-colors group">
+                    <svg class="w-8 h-8 md:w-10 md:h-10 transform group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                </a>
+
+                <!-- Twitter / X -->
+                <a href="https://twitter.com/intent/tweet?text=Check%20out%20this%20{{ product.name|urlencode }}&url={{ request.build_absolute_uri|urlencode }}" target="_blank" title="Share on Twitter" class="text-black hover:text-gray-600 transition-colors group">
+                    <svg class="w-8 h-8 md:w-10 md:h-10 transform group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                </a>
+
+                <!-- Pinterest -->
+                <a href="https://pinterest.com/pin/create/button/?url={{ request.build_absolute_uri|urlencode }}&media={{ request.scheme }}://{{ request.get_host }}{{ product.image.url }}&description={{ product.name|urlencode }}" target="_blank" title="Pin on Pinterest" class="text-black hover:text-red-600 transition-colors group">
+                    <svg class="w-8 h-8 md:w-10 md:h-10 transform group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.401.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146 1.123.345 2.306.535 3.55.535 6.607 0 11.985-5.365 11.985-11.987C23.97 5.367 18.625 0 12.017 0z"/>
+                    </svg>
+                </a>
+
+                <!-- Email -->
+                <a href="mailto:?subject=Check%20out%20this%20{{ product.name|urlencode }}&body=I%20found%20this%20and%20thought%20you%20might%20like%20it:%20{{ request.build_absolute_uri|urlencode }}" title="Share via Email" class="text-black hover:text-gray-500 transition-colors group">
+                    <svg class="w-8 h-8 md:w-10 md:h-10 transform group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                </a>
+            </div>
+
+        </div>
+    </div>
+<script>
+    // Functions to handle the custom share modal
+    function openShareModal() {
+        const modal = document.getElementById('custom-share-modal');
+        modal.classList.remove('hidden');
+        // Prevent scrolling on the main page while modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeShareModal() {
+        const modal = document.getElementById('custom-share-modal');
+        modal.classList.add('hidden');
+        // Restore scrolling
+        document.body.style.overflow = 'auto';
+    }
+</script>
 
 {% endblock %}

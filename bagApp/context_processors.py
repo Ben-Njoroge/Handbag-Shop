@@ -1,4 +1,4 @@
-from .models import Cart, CartItem,Product, Category
+from .models import Cart, CartItem,Product, Category, WishlistItem, Wishlist
 
 
 def search_suggestions(request):
@@ -31,3 +31,23 @@ def cart_counter(request):
 
     # This dictionary broadcasts the 'cart_count' variable to all HTML files
     return dict(cart_count=cart_count)
+
+
+def wishlist_counter(request):
+    wishlist_count = 0
+    # Don't run this logic in the Django admin panel
+    if 'admin' in request.path:
+        return {}
+    else:
+        try:
+            session_id = request.session.session_key
+            if not session_id:
+                request.session.create()
+                session_id = request.session.session_key
+
+            wishlist = Wishlist.objects.get(wishlist_id=session_id)
+            wishlist_count = WishlistItem.objects.filter(wishlist=wishlist, is_active=True).count()
+        except Wishlist.DoesNotExist:
+            wishlist_count = 0
+
+    return dict(wishlist_count=wishlist_count)

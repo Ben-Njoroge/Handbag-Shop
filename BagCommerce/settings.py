@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'bagApp.context_processors.cart_counter',
                 'bagApp.context_processors.search_suggestions',
+                'bagApp.context_processors.wishlist_counter',
             ],
         },
     },
