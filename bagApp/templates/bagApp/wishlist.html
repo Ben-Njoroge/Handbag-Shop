@@ -28,7 +28,7 @@
                         </button>
                     </form>
 
-                    <a href="{% url 'product_detail' item.product.id %}" class="block bg-gray-50 overflow-hidden rounded-md mb-4 aspect-square">
+                    <a href="{% url 'product_detail' item.product.slug %}" class="block bg-gray-50 overflow-hidden rounded-md mb-4 aspect-square">
                         <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     </a>
 

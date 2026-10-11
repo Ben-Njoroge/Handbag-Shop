@@ -147,6 +147,117 @@
 
         </div>
     </div>
+<!-- Reviews Section -->
+<!-- Reviews Section -->
+<div id="reviews" class="max-w-6xl mx-auto px-4 mt-20 mb-16 border-t border-gray-200 pt-16">
+    <!-- Updated Header with Count -->
+    <h3 class="text-2xl font-serif text-gray-900 mb-8">
+        Customer Reviews {% if review_count > 0 %}<span class="text-gray-500 text-lg">({{ review_count }})</span>{% endif %}
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+
+        <!-- Left Column: The Form -->
+        <div class="md:col-span-1">
+            {% if can_review %}
+                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Leave a Review</h4>
+                    <form method="POST" action="{% url 'submit_review' product.id %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rating</label>
+                            <select name="rating" class="w-full border border-gray-300 rounded-md p-2 focus:ring-black focus:border-black text-sm">
+                                <option value="5">★★★★★ (5/5) - Excellent</option>
+                                <option value="4">★★★★☆ (4/5) - Very Good</option>
+                                <option value="3">★★★☆☆ (3/5) - Average</option>
+                                <option value="2">★★☆☆☆ (2/5) - Poor</option>
+                                <option value="1">★☆☆☆☆ (1/5) - Terrible</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Your Feedback</label>
+                            <textarea name="text" rows="4" required placeholder="What did you love about this bag?" class="w-full border border-gray-300 rounded-md p-3 focus:ring-black focus:border-black text-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-black text-white py-3 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">Post Review</button>
+                    </form>
+                </div>
+            {% elif not user.is_authenticated %}
+                <p class="text-sm text-gray-500">You must be <a href="{% url 'login' %}?next={{ request.path }}" class="text-black hover:underline font-medium">logged in</a> to leave a review.</p>
+            {% else %}
+                <p class="text-sm text-gray-500">Only customers with a verified, completed purchase of this specific item can leave a review.</p>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Display Reviews -->
+        <div class="md:col-span-2">
+            {% if reviews %}
+
+                <!-- Average Rating Display -->
+                <div class="flex items-center gap-4 mb-8 pb-8 border-b border-gray-100">
+                    <span class="text-5xl font-serif text-gray-900">{{ avg_rating }}</span>
+                    <div>
+                        <div class="text-black text-lg mb-1 tracking-widest">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= avg_rating_int %}★{% else %}<span class="text-gray-300">★</span>{% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="text-sm text-gray-500">Based on {{ review_count }} review{{ review_count|pluralize }}</p>
+                    </div>
+                </div>
+
+                <!-- Review List Container -->
+                <div id="review-list" class="space-y-6">
+                    {% for review in reviews %}
+                        <!-- We hide any review after the 5th one using Tailwind's 'hidden' class -->
+                        <div class="border-b border-gray-100 pb-6 review-item {% if forloop.counter > 5 %}hidden{% endif %}">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="text-black text-sm tracking-widest">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= review.rating %}★{% else %}<span class="text-gray-300">★</span>{% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="text-sm font-medium text-gray-900 ml-2">{{ review.user.first_name }} {{ review.user.last_name|first }}.</span>
+                                <span class="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 ml-2 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    Verified Buyer
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-3">{{ review.text }}</p>
+                            <p class="text-xs text-gray-400 mt-2">{{ review.created_at|date:"F d, Y" }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- See All Button -->
+                {% if review_count > 5 %}
+                    <div class="mt-6 text-center">
+                        <button id="see-all-btn" onclick="showAllReviews()" class="text-sm font-medium text-black border border-gray-300 rounded-md px-6 py-2 hover:bg-gray-50 transition-colors">
+                            See all {{ review_count }} reviews
+                        </button>
+                    </div>
+
+                    <!-- Tiny Script to toggle hidden reviews -->
+                    <script>
+                        function showAllReviews() {
+                            // Find all hidden reviews and remove the 'hidden' class
+                            document.querySelectorAll('.review-item.hidden').forEach(function(el) {
+                                el.classList.remove('hidden');
+                            });
+                            // Hide the button since everything is now visible
+                            document.getElementById('see-all-btn').style.display = 'none';
+                        }
+                    </script>
+                {% endif %}
+
+            {% else %}
+                <div class="bg-gray-50 border border-gray-100 rounded-lg p-8 text-center">
+                    <p class="text-gray-500 mb-2">No reviews yet.</p>
+                    <p class="text-sm text-gray-400">Be the first to review this item after purchasing!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 <script>
     // Functions to handle the custom share modal
     function openShareModal() {

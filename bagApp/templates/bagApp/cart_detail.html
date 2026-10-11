@@ -23,17 +23,20 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
 
                         <!-- Image & Details -->
+
+<!-- Image & Details (Now Linked to Product Page) -->
                         <div class="flex items-center space-x-4 sm:space-x-6">
                             <!-- Shrunk image slightly on mobile (w-20) -->
-                            <div class="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                            <a href="{% url 'product_detail' cart_item.product.slug %}" class="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity">
                                 <img src="{{ cart_item.product.image.url }}" alt="{{ cart_item.product.name }}" class="w-full h-full object-cover">
-                            </div>
+                            </a>
                             <div>
-                                <h2 class="text-base sm:text-lg font-medium text-gray-900">{{ cart_item.product.name }}</h2>
+                                <a href="{% url 'product_detail' cart_item.product.slug %}" class="hover:underline">
+                                    <h2 class="text-base sm:text-lg font-medium text-gray-900">{{ cart_item.product.name }}</h2>
+                                </a>
                                 <p class="text-sm text-gray-500">KES {{ cart_item.product.price }}</p>
                             </div>
                         </div>
-
                         <!-- Quantity, Subtotal & Actions -->
                         <!-- Converted to a horizontal row on mobile, column on desktop -->
                         <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-gray-100 mt-2 sm:mt-0">

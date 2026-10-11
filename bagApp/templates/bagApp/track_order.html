@@ -1,50 +1,117 @@
 {% extends 'bagApp/base.html' %}
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 mt-10 mb-16">
+<div class="max-w-3xl mx-auto px-4 mt-10 mb-16 min-h-[60vh]">
     <h1 class="text-3xl font-serif text-gray-900 mb-8 text-center">Track Your Order</h1>
 
-    <div class="bg-white p-8 rounded-xl shadow-sm border mb-8">
-        <form method="POST" action="{% url 'track_order' %}" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            {% csrf_token %}
-            <div>
-                <label class="block text-sm font-medium">Phone Number</label>
-                <input type="text" name="phone_number" required placeholder="07XX XXX XXX" class="w-full border rounded-md p-3">
-            </div>
-            <div>
-                <label class="block text-sm font-medium">M-PESA Code</label>
-                <input type="text" name="mpesa_code" required placeholder="TAD8XXXXXX" class="w-full border rounded-md p-3 uppercase">
-            </div>
-            <button type="submit" class="md:col-span-2 bg-black text-white py-3 rounded-md hover:bg-gray-800">Track Package</button>
-        </form>
-        {% if error %}<p class="text-red-600 mt-4 text-center">{{ error }}</p>{% endif %}
-    </div>
+    {% if user.is_authenticated %}
 
-    {% if order %}
-    <div class="bg-gray-50 p-8 rounded-xl border">
-        <div class="flex justify-between items-center border-b pb-4 mb-4">
-            <h2 class="text-xl font-medium">Order #{{ order.id }}</h2>
-            <span class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-200">{{ order.status }}</span>
-        </div>
+        <!-- LOGGED IN VIEW: Show automatic tracking cards -->
+        {% if active_orders %}
+            <p class="text-gray-500 text-sm mb-6 text-center">
+                Here are your recent orders. You can view your full history in your <a href="{% url 'dashboard' %}" class="text-black font-semibold hover:underline">Dashboard</a>.
+            </p>
 
-        <p><strong>Customer:</strong> {{ order.full_name }}</p>
-        <p><strong>Destination:</strong> {{ order.delivery_location.name }}</p>
+            <div class="space-y-6">
+                {% for current_order in active_orders %}
+                <div class="bg-gray-50 p-8 rounded-xl border">
+                    <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+                        <h2 class="text-xl font-medium">Order #{{ current_order.id }}</h2>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold
+                            {% if current_order.status == 'Pending' %}bg-yellow-200 text-yellow-800
+                            {% elif current_order.status == 'Paid' %}bg-blue-200 text-blue-800
+                            {% elif current_order.status == 'Dispatched' %}bg-purple-200 text-purple-800
+                            {% elif current_order.status == 'Delivered' %}bg-green-200 text-green-800
+                            {% else %}bg-gray-200 text-gray-800{% endif %}">
+                            {{ current_order.status }}
+                        </span>
+                    </div>
 
-        {% if order.status == 'Dispatched' or order.status == 'Delivered' %}
-            <div class="mt-6 p-6 bg-white border border-purple-200 rounded-lg">
-                {% if order.delivery_location.requires_waybill %}
-                    <p class="text-sm text-purple-800 mb-1">2NK Waybill Number</p>
-                    <p class="text-2xl font-mono font-bold">{{ order.tracking_number }}</p>
-                    <p class="text-sm text-gray-500 mt-2">Present this Waybill and your ID at the 2NK office to collect.</p>
-                {% else %}
-                    <p class="text-sm text-purple-800 mb-1">Agent Dispatch Status</p>
-                    <p class="font-medium text-gray-900">Out for Delivery / Ready for Meetup</p>
-                    <p class="text-sm text-gray-500 mt-2">Our agent is organizing your drop-off and will call you on {{ order.phone_number }} shortly.</p>
-                {% endif %}
+                    <p class="text-sm text-gray-700"><strong>Customer:</strong> {{ current_order.full_name }}</p>
+                    <p class="text-sm text-gray-700"><strong>Destination:</strong> {{ current_order.delivery_location.name }}</p>
+
+                    {% if current_order.status == 'Dispatched' or current_order.status == 'Delivered' %}
+                        <div class="mt-6 p-6 bg-white border border-purple-200 rounded-lg">
+                            {% if current_order.delivery_location.requires_waybill %}
+                                <p class="text-sm text-purple-800 mb-1">2NK Waybill Number</p>
+                                <p class="text-2xl font-mono font-bold">{{ current_order.tracking_number }}</p>
+                                <p class="text-sm text-gray-500 mt-2">Present this Waybill and your ID at the 2NK office to collect.</p>
+                            {% else %}
+                                <p class="text-sm text-purple-800 mb-1">Agent Dispatch Status</p>
+                                <p class="font-medium text-gray-900">Out for Delivery / Ready for Meetup</p>
+                                <p class="text-sm text-gray-500 mt-2">Our agent is organizing your drop-off and will call you on {{ current_order.phone_number }} shortly.</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-gray-500 italic mt-4">We are verifying your payment and preparing your package. Check back soon!</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
         {% else %}
-            <p class="text-sm text-gray-500 italic mt-4">We are verifying your payment and preparing your package. Check back soon!</p>
+            <!-- Logged in, but no active orders -->
+            <div class="text-center p-12 bg-gray-50 rounded-xl border border-gray-100">
+                <p class="text-gray-500 mb-6">You don't have any recent orders to track.</p>
+                <a href="{% url 'product_list' %}" class="inline-block bg-black text-white px-6 py-3 rounded-md text-sm font-medium hover:bg-gray-800">Start Shopping</a>
+            </div>
         {% endif %}
-    </div>
+
+    {% else %}
+
+        <!-- GUEST VIEW: Manual Search Form -->
+        <div class="bg-white p-8 rounded-xl shadow-sm border mb-8">
+            <p class="text-gray-500 text-sm mb-6 text-center">Enter your checkout details below to find your order status.</p>
+            <form method="POST" action="{% url 'track_order' %}" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium mb-1">Phone Number</label>
+                    <input type="text" name="phone_number" required placeholder="07XX XXX XXX" class="w-full border border-gray-300 focus:ring-black focus:border-black rounded-md p-3">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">M-PESA Code</label>
+                    <input type="text" name="mpesa_code" required placeholder="TAD8XXXXXX" class="w-full border border-gray-300 focus:ring-black focus:border-black rounded-md p-3 uppercase">
+                </div>
+                <button type="submit" class="md:col-span-2 bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors font-medium">Track Package</button>
+            </form>
+            {% if error %}<p class="text-red-600 mt-4 text-center text-sm font-medium">{{ error }}</p>{% endif %}
+        </div>
+
+        {% if order %}
+        <!-- Search Result for Guests -->
+        <div class="bg-gray-50 p-8 rounded-xl border">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+                <h2 class="text-xl font-medium">Order #{{ order.id }}</h2>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                    {% if order.status == 'Pending' %}bg-yellow-200 text-yellow-800
+                    {% elif order.status == 'Paid' %}bg-blue-200 text-blue-800
+                    {% elif order.status == 'Dispatched' %}bg-purple-200 text-purple-800
+                    {% elif order.status == 'Delivered' %}bg-green-200 text-green-800
+                    {% elif order.status == 'Completed' %}bg-teal-600 text-white
+                    {% else %}bg-gray-200 text-gray-800{% endif %}">
+                    {{ order.status }}
+                </span>
+            </div>
+
+            <p class="text-sm text-gray-700"><strong>Customer:</strong> {{ order.full_name }}</p>
+            <p class="text-sm text-gray-700"><strong>Destination:</strong> {{ order.delivery_location.name }}</p>
+
+            {% if order.status == 'Dispatched' or order.status == 'Delivered' %}
+                <div class="mt-6 p-6 bg-white border border-purple-200 rounded-lg">
+                    {% if order.delivery_location.requires_waybill %}
+                        <p class="text-sm text-purple-800 mb-1">2NK Waybill Number</p>
+                        <p class="text-2xl font-mono font-bold">{{ order.tracking_number }}</p>
+                        <p class="text-sm text-gray-500 mt-2">Present this Waybill and your ID at the 2NK office to collect.</p>
+                    {% else %}
+                        <p class="text-sm text-purple-800 mb-1">Agent Dispatch Status</p>
+                        <p class="font-medium text-gray-900">Out for Delivery / Ready for Meetup</p>
+                        <p class="text-sm text-gray-500 mt-2">Our agent is organizing your drop-off and will call you on {{ order.phone_number }} shortly.</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-sm text-gray-500 italic mt-4">We are verifying your payment and preparing your package. Check back soon!</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
     {% endif %}
 </div>
 {% endblock %}

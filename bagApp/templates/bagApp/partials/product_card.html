@@ -1,6 +1,6 @@
 <!-- Reusable Product Card -->
 <!-- The entire wrapper is now an 'a' tag, making it highly clickable on mobile -->
-<a href="{% url 'product_detail' product.id %}" class="relative group flex flex-col h-full border border-transparent hover:border-gray-100 hover:shadow-sm rounded-lg p-2 transition-all">
+<a href="{% url 'product_detail' product.slug %}" class="relative group flex flex-col h-full border border-transparent hover:border-gray-100 hover:shadow-sm rounded-lg p-2 transition-all">
 
     <!-- Status Badges -->
     <div class="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
